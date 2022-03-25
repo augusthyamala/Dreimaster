@@ -1098,13 +1098,14 @@ int main( int argc, char* argv[] )
 	      200, 0, 100 );
 
   TH2I hxbmod_clsz( "xbmod_clsz", "xB, triplet, Landau peak;cluster size;Landau peak hits",
-		    8, 1, 9, 200, 0, 100 );
+		    8, 1, 9, 50, 0, 25 );
 
   TH1I hxBmodptch( "xBmodptch", "xB, triplet, Landau peak;x_{B} mod pitch [#mum];Landau peak hits",
 	       50, 0, 25 );
 
-  TH1I hxcorrB( "xcorrB", "xB, triplet, Landau peak;x_{B} mod pitch [#mum];Landau peak hits", 34, 0, 17 );
- 
+  TH1I hxcorrB( "xcorrB", "xB, triplet, Landau peak;x_{B} mod pitch [#mum];Landau peak hits", 50, 0, 25 );
+  TH1I hxbclsz1("xbclsz1", "xB, triplet, Landau peak;x_{B} mod pitch [#mum];Landau peak hits", 50, 0, 25); 
+
   TH1I hdx3cq( "dx3cq", "triplet dx, Landau peak;dx [#mum];Landau peak triplets",
 	       400, -100, 100 );
   TH1I hdx3cqi( "dx3cqi",
@@ -1117,6 +1118,9 @@ int main( int argc, char* argv[] )
 		 400, -100, 100 );
 
   TH1I hdx3clsz1( "dx3clsz1", "triplet dx, 3 Landau peak [cluster size 1 events];dx [#mum];Landau peak triplets",
+		400, -100, 100 );
+
+  TH1I hdz3cq3( "dz3cq3", "triplet dx, Landau peak;dx [#mum];Landau peak triplets",
 		400, -100, 100 );
 
   TH1I hdx3clsz2( "dx3clsz2", "triplet dx, 3 Landau peak [cluster size 2 events];dx [#mum];Landau peak triplets",
@@ -1529,7 +1533,7 @@ int main( int argc, char* argv[] )
     if( abs( ddtCA ) > 999 ) ++dsyncCA;
 
     // 2207 AB unsync 7150
-    /*
+    
     if( abs( ddtAB ) > 999 )
       cout << "  " << iev
 	   << "  AB ddt " << ddtAB
@@ -1542,7 +1546,7 @@ int main( int argc, char* argv[] )
 	   << "  CB ddt " << ddtCB
 	   << "  C dt " << dtC
 	   << "  B dt " << dtB
-	   << endl;*/
+	   << endl;
 
     if( evinfoA->skip ) skipvsevA.Fill( iev );
     if( evinfoB->skip ) skipvsevB.Fill( iev );
@@ -2058,7 +2062,18 @@ int main( int argc, char* argv[] )
 	  // triplet residual:
 
 	  double dx3 = xB - xavg;
-	 
+
+	  double xBp = fmod( xB + 8.0125, ptchr);
+	  hxBmodptch.Fill(xBp*1E3);
+
+	  double xBcorr = xB;
+	  if( nrowB > 1 )
+	    {
+	      double xBcorr = xB - (xBp - ( xbBias->GetBinContent(xbBias->FindBin( xBp*1E3 )) )/1000);
+	    }
+
+	  double dz3 = xBcorr - xavg;
+
 	  double du3 = dx3;
 
 	  if( run >= 4655 && run <= 4672 ) { // du3vsxm->Fit("pol9")
@@ -3514,6 +3529,7 @@ int main( int argc, char* argv[] )
 		hnrowC3cut.Fill(nrowC);
 		// rms = dx3*dx3; 
 		// noe += noe; 
+		hdz3cq3.Fill(dz3*1E3); //bias correction
 		hdx3cq3.Fill( dx3*1E3 ); // 1020: 2.85
 		hdu3cq3.Fill( du3*1E3 ); // skw corrected 1020: 2.74
 		hdv3cq3.Fill( dv3*1E3 ); // bias corrected 4702 2.495
@@ -3538,14 +3554,14 @@ int main( int argc, char* argv[] )
 		  double yB = cB->col * ptchc - 3.9;
 
 		  double xBmod = fabs(fmod( xB + 8.0125, 0.1 ));
-		  double xBp = fmod( xB + 8.0125, ptchr);
+		  // double xBp = fmod( xB + 8.0125, ptchr); //xB + 8.0125
 		  if(cB->q > qL && cB->q < qR
 		     && cA->q > qL && cA->q < qR
 		     && cC->q > qL && cC->q < qR)
 		    {
 		      hxbmod.Fill( xBmod*1E3 );
 		      hncolB3cut.Fill(ncolB);
-		      hxBmodptch.Fill(xBp*1E3);
+		      // hxBmodptch.Fill(xBp*1E3);
 
 		      for(int i = 1; i < 8; i++)
 			{
@@ -3554,17 +3570,9 @@ int main( int argc, char* argv[] )
 			      hxbmod_clsz.Fill( i, xBmod*1E3 );
 			    }
 			}
-
-		      if( nrowB > 1 )
-			{
-			  double xBcorr = xBp + ( xbBias->GetBinContent(xbBias->FindBin( xBp*1E3 )) ); 
-			  double xBmodcorr = fmod( xBcorr + 8.0125, ptchr );
-			  hxcorrB.Fill( xBmodcorr*1E3 );
-			}
-
 		    }
 		}
-	
+
 		hxmod.Fill( xmod*1E3 ); // (A+C)/2
 		dx3vsxm.Fill( xmod*1E3, dx3*1E3 );
 		du3vsxm.Fill( xmod*1E3, du3*1E3 );
