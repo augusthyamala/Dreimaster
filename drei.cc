@@ -1101,9 +1101,8 @@ int main( int argc, char* argv[] )
 		    8, 1, 9, 50, 0, 25 );
 
   TH1I hxBmodptch( "xBmodptch", "xB, triplet, Landau peak;x_{B} mod pitch [#mum];Landau peak hits",
-	       50, 0, 25 );
+	       100, 0, 25 );
 
-  TH1I hxcorrB( "xcorrB", "xB, triplet, Landau peak;x_{B} mod pitch [#mum];Landau peak hits", 50, 0, 25 );
   TH1I hxbclsz1("xbclsz1", "xB, triplet, Landau peak;x_{B} mod pitch [#mum];Landau peak hits", 50, 0, 25); 
 
   TH1I hdx3cq( "dx3cq", "triplet dx, Landau peak;dx [#mum];Landau peak triplets",
@@ -2066,14 +2065,17 @@ int main( int argc, char* argv[] )
 	  double xBp = fmod( xB + 8.0125, ptchr);
 	  hxBmodptch.Fill(xBp*1E3);
 
-	  double xBcorr = xB;
-	  if( nrowB > 1 )
+	  double xBcorr;
+	  double dz3;
+
+	  if( nrowB != 1 )
 	    {
 	      double xBcorr = xB - (xBp - ( xbBias->GetBinContent(xbBias->FindBin( xBp*1E3 )) )/1000);
+	      double dz3 = xBcorr - xavg;
 	    }
-
-	  double dz3 = xBcorr - xavg;
-
+	  else
+	    dz3 = dx3;
+	 
 	  double du3 = dx3;
 
 	  if( run >= 4655 && run <= 4672 ) { // du3vsxm->Fit("pol9")
@@ -3528,7 +3530,7 @@ int main( int argc, char* argv[] )
 		hclszC3cut.Fill( cC->size );
 		hnrowC3cut.Fill(nrowC);
 		// rms = dx3*dx3; 
-		// noe += noe; 
+		// noe += noe;
 		hdz3cq3.Fill(dz3*1E3); //bias correction
 		hdx3cq3.Fill( dx3*1E3 ); // 1020: 2.85
 		hdu3cq3.Fill( du3*1E3 ); // skw corrected 1020: 2.74
